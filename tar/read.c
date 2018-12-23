@@ -102,6 +102,7 @@ tar_mode_x(struct bsdtar *bsdtar)
 {
 	struct archive *writer;
 
+	while (__AFL_LOOP(1000)) {
 	writer = archive_write_disk_new();
 	if (writer == NULL)
 		lafe_errc(1, ENOMEM, "Cannot allocate disk writer object");
@@ -115,6 +116,7 @@ tar_mode_x(struct bsdtar *bsdtar)
 	    "Not found in archive") != 0)
 		bsdtar->return_value = 1;
 	archive_write_free(writer);
+	}
 }
 
 static void
@@ -182,9 +184,11 @@ read_archive(struct bsdtar *bsdtar, char mode, struct archive *writer)
 			    archive_error_string(bsdtar->matching));
 
 	a = archive_read_new();
-	if (cset_read_support_filter_program(bsdtar->cset, a) == 0)
+	/*if (cset_read_support_filter_program(bsdtar->cset, a) == 0)
 		archive_read_support_filter_all(a);
-	archive_read_support_format_all(a);
+	archive_read_support_format_all(a);*/
+	archive_read_support_filter_none(a);
+	archive_read_support_format_ar(a);
 
 	reader_options = getenv(ENV_READER_OPTIONS);
 	if (reader_options != NULL) {
