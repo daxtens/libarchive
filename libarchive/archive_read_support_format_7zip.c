@@ -54,6 +54,8 @@ __FBSDID("$FreeBSD$");
 #include "archive_crc32.h"
 #endif
 
+#define DONT_FAIL_ON_CRC_ERROR
+
 #define _7ZIP_SIGNATURE	"7z\xBC\xAF\x27\x1C"
 #define SFX_MIN_ADDR	0x27000
 #define SFX_MAX_ADDR	0x60000
@@ -527,9 +529,11 @@ check_7zip_header_in_sfx(const char *p)
 		 * Magic Code, so we should do this in order not to
 		 * make a mis-detection.
 		 */
+#ifndef DONT_FAIL_ON_CRC_ERROR
 		if (crc32(0, (const unsigned char *)p + 12, 20)
 			!= archive_le32dec(p + 8))
 			return (6);
+#endif
 		/* Hit the header! */
 		return (0);
 	case 0x37: return (5);
@@ -828,6 +832,7 @@ archive_read_format_7zip_read_data(struct archive_read *a,
 		    (unsigned)bytes);
 
 	/* If we hit the end, swallow any end-of-data marker. */
+#ifndef DONT_FAIL_ON_CRC_ERROR
 	if (zip->end_of_entry) {
 		/* Check computed CRC against file contents. */
 		if ((zip->entry->flg & CRC32_IS_SET) &&
@@ -841,6 +846,7 @@ archive_read_format_7zip_read_data(struct archive_read *a,
 			ret = ARCHIVE_WARN;
 		}
 	}
+#endif
 
 	*size = bytes;
 	*offset = zip->entry_offset;
@@ -2826,12 +2832,14 @@ slurp_central_directory(struct archive_read *a, struct _7zip *zip,
 		return (ARCHIVE_FATAL);
 	}
 
+#ifndef DONT_FAIL_ON_CRC_ERROR
 	/* CRC check. */
 	if (crc32(0, (const unsigned char *)p + 12, 20)
 	    != archive_le32dec(p + 8)) {
 		archive_set_error(&a->archive, -1, "Header CRC error");
 		return (ARCHIVE_FATAL);
 	}
+#endif
 
 	next_header_offset = archive_le64dec(p + 12);
 	next_header_size = archive_le64dec(p + 20);
@@ -2877,12 +2885,15 @@ slurp_central_directory(struct archive_read *a, struct _7zip *zip,
 		 */
 		r = decode_encoded_header_info(a, &(zip->si));
 
+#ifndef DONT_FAIL_ON_CRC_ERROR
 		/* Check the EncodedHeader CRC.*/
 		if (r == 0 && zip->header_crc32 != next_header_crc) {
 			archive_set_error(&a->archive, -1,
 			    "Damaged 7-Zip archive");
 			r = -1;
 		}
+#endif
+
 		if (r == 0) {
 			if (zip->si.ci.folders[0].digest_defined)
 				next_header_crc = zip->si.ci.folders[0].digest;
@@ -2930,12 +2941,14 @@ slurp_central_directory(struct archive_read *a, struct _7zip *zip,
 			return (ARCHIVE_FATAL);
 		}
 
+#ifndef DONT_FAIL_ON_CRC_ERROR
 		/* Check the Header CRC.*/
 		if (check_header_crc && zip->header_crc32 != next_header_crc) {
 			archive_set_error(&a->archive, -1,
 			    "Malformed 7-Zip archive");
 			return (ARCHIVE_FATAL);
 		}
+#endif
 		break;
 	default:
 		archive_set_error(&a->archive, -1,
