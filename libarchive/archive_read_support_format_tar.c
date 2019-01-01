@@ -890,6 +890,7 @@ checksum(struct archive_read *a, const void *h)
 			return 0;
 	}
 
+	return 1;
 	/*
 	 * Test the checksum.  Note that POSIX specifies _unsigned_
 	 * bytes for this calculation.
