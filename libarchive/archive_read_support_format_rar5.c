@@ -54,6 +54,10 @@
 /*#define DONT_FAIL_ON_CRC_ERROR*/
 /*#define DEBUG*/
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+#define DONT_FAIL_ON_CRC_ERROR
+#endif
+
 #define rar5_min(a, b) (((a) > (b)) ? (b) : (a))
 #define rar5_max(a, b) (((a) > (b)) ? (a) : (b))
 #define rar5_countof(X) ((const ssize_t) (sizeof(X) / sizeof(*X)))
