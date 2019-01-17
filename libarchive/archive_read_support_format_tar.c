@@ -920,6 +920,10 @@ checksum(struct archive_read *a, const void *h)
 	if (sum == check)
 		return (1);
 
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+	return (1);
+#endif
+
 	return (0);
 }
 
