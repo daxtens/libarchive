@@ -1695,6 +1695,7 @@ static int process_base_block(struct archive_read* a,
         return ARCHIVE_EOF;
     }
 
+#ifndef DONT_FAIL_ON_CRC_ERROR
     /* Verify the CRC32 of the header data. */
     computed_crc = (uint32_t) crc32(0, p, (int) hdr_size);
     if(computed_crc != hdr_crc) {
@@ -1703,6 +1704,9 @@ static int process_base_block(struct archive_read* a,
 
         return ARCHIVE_FATAL;
     }
+#else
+    (void)computed_crc;
+#endif
 
     /* If the checksum is OK, we proceed with parsing. */
     if(ARCHIVE_OK != consume(a, hdr_size_len)) {
@@ -2211,6 +2215,7 @@ static int parse_block_header(struct archive_read* a, const uint8_t* p,
                                ^ (uint8_t) (*block_size >> 8)
                                ^ (uint8_t) (*block_size >> 16);
 
+#ifndef DONT_FAIL_ON_CRC_ERROR
     if(calculated_cksum != hdr->block_cksum) {
         archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
                 "Block checksum error: got 0x%02x, expected 0x%02x",
@@ -2218,6 +2223,9 @@ static int parse_block_header(struct archive_read* a, const uint8_t* p,
 
         return ARCHIVE_FATAL;
     }
+#else
+    (void)calculated_cksum;
+#endif
 
     return ARCHIVE_OK;
 }
