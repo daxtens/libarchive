@@ -37,8 +37,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len) {
   ssize_t r;
   struct archive *a = archive_read_new();
 
-  archive_read_support_filter_all(a);
-  archive_read_support_format_all(a);
+  archive_read_support_filter_none(a);
+  archive_read_support_format_zip(a);
 
   Buffer buffer = {buf, len};
   archive_read_open(a, &buffer, NULL, reader_callback, NULL);
