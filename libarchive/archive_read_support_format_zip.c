@@ -3103,7 +3103,13 @@ archive_read_support_format_zip_streamable(struct archive *_a)
 	 * any encrypted entries yet.
 	 */
 	zip->has_encrypted_entries = ARCHIVE_READ_FORMAT_ENCRYPTION_DONT_KNOW;
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+	zip->crc32func = fake_crc32;
+	zip->ignore_crc32 = 1;
+#else
 	zip->crc32func = real_crc32;
+#endif
+
 
 	r = __archive_read_register_format(a,
 	    zip,
@@ -3869,7 +3875,13 @@ archive_read_support_format_zip_seekable(struct archive *_a)
 	 * any encrypted entries yet.
 	 */
 	zip->has_encrypted_entries = ARCHIVE_READ_FORMAT_ENCRYPTION_DONT_KNOW;
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+	zip->crc32func = fake_crc32;
+	zip->ignore_crc32 = 1;
+#else
 	zip->crc32func = real_crc32;
+#endif
+
 
 	r = __archive_read_register_format(a,
 	    zip,
