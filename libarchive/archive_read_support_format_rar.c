@@ -906,11 +906,13 @@ archive_read_format_rar_read_header(struct archive_read *a,
       }
 
       crc32_val = crc32(0, (const unsigned char *)p + 2, (unsigned)skip - 2);
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
       if ((crc32_val & 0xffff) != archive_le16dec(p)) {
         archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
           "Header CRC error");
         return (ARCHIVE_FATAL);
       }
+#endif
       __archive_read_consume(a, skip);
       break;
 
@@ -964,11 +966,13 @@ archive_read_format_rar_read_header(struct archive_read *a,
 	      __archive_read_consume(a, did_read);
 	      skip -= did_read;
       }
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
       if ((crc32_val & 0xffff) != crc32_expected) {
 	      archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 		  "Header CRC error");
 	      return (ARCHIVE_FATAL);
       }
+#endif
       if (head_type == ENDARC_HEAD)
 	      return (ARCHIVE_EOF);
       break;
@@ -1327,11 +1331,13 @@ read_header(struct archive_read *a, struct archive_entry *entry,
 
   /* File Header CRC check. */
   crc32_val = crc32(crc32_val, h, (unsigned)(header_size - 7));
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   if ((crc32_val & 0xffff) != archive_le16dec(rar_header.crc)) {
     archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
       "Header CRC error");
     return (ARCHIVE_FATAL);
   }
+#endif
   /* If no CRC error, Go on parsing File Header. */
   p = h;
   endp = p + header_size - 7;
@@ -1828,11 +1834,13 @@ read_data_stored(struct archive_read *a, const void **buff, size_t *size,
     *buff = NULL;
     *size = 0;
     *offset = rar->offset;
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     if (rar->file_crc != rar->crc_calculated) {
       archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
                         "File CRC error");
       return (ARCHIVE_FATAL);
     }
+#endif
     rar->entry_eof = 1;
     return (ARCHIVE_EOF);
   }
@@ -1891,11 +1899,13 @@ read_data_compressed(struct archive_read *a, const void **buff, size_t *size,
       *buff = NULL;
       *size = 0;
       *offset = rar->offset;
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
       if (rar->file_crc != rar->crc_calculated) {
         archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
                           "File CRC error");
         return (ARCHIVE_FATAL);
       }
+#endif
       rar->entry_eof = 1;
       return (ARCHIVE_EOF);
     }
