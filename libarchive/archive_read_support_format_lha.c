@@ -832,11 +832,13 @@ lha_read_file_header_0(struct archive_read *a, struct lha *lha)
 	}
 	__archive_read_consume(a, lha->header_size);
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 	if (sum_calculated != headersum) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 		    "LHa header sum error");
 		return (ARCHIVE_FATAL);
 	}
+#endif
 
 	return (ARCHIVE_OK);
 }
@@ -933,11 +935,13 @@ lha_read_file_header_1(struct archive_read *a, struct lha *lha)
 	if (lha->compsize < 0)
 		goto invalid;	/* Invalid compressed file size */
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 	if (sum_calculated != headersum) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 		    "LHa header sum error");
 		return (ARCHIVE_FATAL);
 	}
+#endif
 	return (err);
 invalid:
 	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
@@ -1015,11 +1019,13 @@ lha_read_file_header_2(struct archive_read *a, struct lha *lha)
 		__archive_read_consume(a, padding);
 	}
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 	if (header_crc != lha->header_crc) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 		    "LHa header CRC error");
 		return (ARCHIVE_FATAL);
 	}
+#endif
 	return (err);
 }
 
@@ -1083,11 +1089,13 @@ lha_read_file_header_3(struct archive_read *a, struct lha *lha)
 	if (err < ARCHIVE_WARN)
 		return (err);
 
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 	if (header_crc != lha->header_crc) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 		    "LHa header CRC error");
 		return (ARCHIVE_FATAL);
 	}
+#endif
 	return (err);
 invalid:
 	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
@@ -1357,12 +1365,14 @@ lha_end_of_entry(struct archive_read *a)
 	int r = ARCHIVE_EOF;
 
 	if (!lha->end_of_entry_cleanup) {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 		if ((lha->setflag & CRC_IS_SET) &&
 		    lha->crc != lha->entry_crc_calculated) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 			    "LHa data CRC error");
 			r = ARCHIVE_WARN;
 		}
+#endif
 
 		/* End-of-entry cleanup done. */
 		lha->end_of_entry_cleanup = 1;
