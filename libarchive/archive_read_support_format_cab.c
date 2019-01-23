@@ -1170,6 +1170,7 @@ cab_checksum_finish(struct archive_read *a)
 		l += cab->cfheader.cfdata;
 	cfdata->sum_calculated = cab_checksum_cfdata(
 	    cfdata->memimage + CFDATA_cbData, l, cfdata->sum_calculated);
+#ifndef FUZZING_BUILD_MODE_NOT_FOR_PRODUCTION
 	if (cfdata->sum_calculated != cfdata->sum) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 		    "Checksum error CFDATA[%d] %x:%x in %d bytes",
@@ -1178,6 +1179,7 @@ cab_checksum_finish(struct archive_read *a)
 		    cfdata->compressed_size);
 		return (ARCHIVE_FAILED);
 	}
+#endif
 	return (ARCHIVE_OK);
 }
 
