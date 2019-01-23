@@ -2081,6 +2081,12 @@ static int parse_tables(struct archive_read* a, struct rar5* rar,
     for(i = 0; i < HUFF_TABLE_SIZE;) {
         uint16_t num;
 
+        if (rar->bits.in_addr >= rar->cstate.cur_block_size) {
+            archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
+                    "Truncated huffman tables");
+            return ARCHIVE_FATAL;
+        }
+
         ret = decode_number(a, &rar->cstate.bd, p, &num);
         if(ret != ARCHIVE_OK) {
             archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
