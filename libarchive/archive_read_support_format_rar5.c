@@ -3399,7 +3399,7 @@ static int rar5_read_data_skip(struct archive_read *a) {
             /* Turn off "skip mode". */
             rar->skip_mode--;
 
-            if(ret < 0) {
+            if(ret != ARCHIVE_OK) {
                 /* Propagate any potential error conditions to the caller. */
                 return ret;
             }
