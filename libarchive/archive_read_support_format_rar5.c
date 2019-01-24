@@ -3057,6 +3057,13 @@ static int do_uncompress_file(struct archive_read* a) {
             init_unpack(rar);
         }
 
+        if (rar->cstate.window_size == 0) {
+            /* this is invalid for a file */
+            archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
+                "Invalid zero window size for file");
+            return ARCHIVE_FATAL;
+        }
+
         rar->cstate.initialized = 1;
     }
 
