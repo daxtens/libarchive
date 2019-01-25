@@ -3354,6 +3354,8 @@ static int rar5_read_data(struct archive_read *a, const void **buff,
     int ret;
     struct rar5* rar = get_context(a);
 
+    if(size) *size = 0;
+
     if(!rar->skip_mode && (rar->cstate.last_write_ptr > rar->file.unpacked_size)) {
         archive_set_error(&a->archive, ARCHIVE_ERRNO_PROGRAMMER,
                 "Unpacker has written too many bytes");
