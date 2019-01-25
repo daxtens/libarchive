@@ -168,11 +168,15 @@ struct comp_state {
      * skipping through different multivolume archives. */
     uint8_t switch_multivolume : 1;
 
+    /* We cannot handle nested merges, so specifically test for that.
+     * switch_multivolume has a slightly different role */
+    uint8_t in_merge : 1;
+
     /* Flag used to specify if unpacker has processed the whole data block or
      * just a part of it. */
     uint8_t block_parsing_finished : 1;
 
-    int notused : 4;
+    int notused : 3;
 
     int flags;                   /* Uncompression flags. */
     int method;                  /* Uncompression algorithm method. */
@@ -2715,6 +2719,15 @@ static int merge_block(struct archive_read* a, ssize_t block_size,
     const uint8_t* lp;
     int ret;
 
+    /* Cannot do nested merges! */
+    if (rar->cstate.in_merge == 1) {
+        archive_set_error(&a->archive, ARCHIVE_ERRNO_PROGRAMMER,
+            "Attempted to do a nested block merge");
+        return ARCHIVE_FATAL;
+    } else {
+        rar->cstate.in_merge = 1;
+    }
+
     /* Set a flag that we're in the switching mode. */
     rar->cstate.switch_multivolume = 1;
 
@@ -2796,7 +2809,7 @@ static int merge_block(struct archive_read* a, ssize_t block_size,
 
     /* If we're here, we can resume unpacking by processing the block pointed
      * to by the `*p` memory pointer. */
-
+    rar->cstate.in_merge = 0;
     return ARCHIVE_OK;
 }
 
