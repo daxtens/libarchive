@@ -2420,6 +2420,20 @@ static int do_uncompress_block(struct archive_read* a, const uint8_t* p) {
     const struct compressed_block_header* hdr = &rar->last_block_hdr;
     const uint8_t bit_size = 1 + bf_bit_size(hdr);
 
+    if(rar->cstate.write_ptr - rar->cstate.last_write_ptr >
+            (rar->cstate.window_size >> 1)) {
+
+        /* If we start the function in this state, bad things are happening
+         * and we will end up forever looping without making progress:
+         * we refuse to move the write/last_write ptrs, and the caller
+         * loops until we do. Bail. */
+
+        archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
+            "Cannot make forward progress in this compression state");
+        return ARCHIVE_FATAL;
+    }
+
+
     while(1) {
         if(rar->cstate.write_ptr - rar->cstate.last_write_ptr >
                 (rar->cstate.window_size >> 1)) {
